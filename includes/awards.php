@@ -878,7 +878,34 @@ EOHTML;
         $email_address = get_post_meta( $post_id, 'wpbadger-award-email-address', true );
         if (get_post_meta( $post_id, 'wpbadger-award-email-sent', true ) == $email_address)
             return;
-
+        
+        $subject_tags = array(
+                'BADGE_TITLE'   => $badge_title,
+                'AWARD_TITLE'   => $award_title
+            );
+        
+        $message_tags = array(
+                'BADGE_TITLE'       => esc_html( $badge_title ),
+                'BADGE_URL'         => $badge_url,
+                'BADGE_IMAGE_URL'   => $badge_image_url,
+                'BADGE_DESCRIPTION' => esc_html( $badge_desc ),
+                'AWARD_TITLE'       => esc_html( $award_title ),
+                'AWARD_URL'         => $award_url,
+                'EVIDENCE'          => $award_evidence
+            );
+            
+    	$user = get_user_by( "email", $email_address );
+    	if($user){
+    		if ( $user->has_prop( 'first_name' ) ) {
+    			$subject_tags["FIRST_NAME"] = $user->user_firstname;
+    			$message_tags["FIRST_NAME"] = $user->user_firstname;
+    		}
+    		if ( $user->has_prop( 'last_name' ) ) {
+    			$subject_tags["LAST_NAME"] = $user->user_lastname;
+    			$message_tags["LAST_NAME"] = $user->user_lastname;
+    		}
+    	}
+	
         $badge_title    = get_the_title( $badge_id );
         $badge_url      = get_permalink( $badge_id );
         $badge_image_id = get_post_thumbnail_id( $badge_id );
@@ -892,24 +919,13 @@ EOHTML;
 
         $subject = wpbadger_template(
             get_option( 'wpbadger_awarded_email_subject' ),
-            array(
-                'BADGE_TITLE'   => $badge_title,
-                'AWARD_TITLE'   => $award_title
-            )
+            $subject_tags
         );
         $subject = apply_filters( 'wpbadger_awarded_email_subject', $subject );
 
         $message = wpbadger_template(
             get_option( 'wpbadger_awarded_email_html' ),
-            array(
-                'BADGE_TITLE'       => esc_html( $badge_title ),
-                'BADGE_URL'         => $badge_url,
-                'BADGE_IMAGE_URL'   => $badge_image_url,
-                'BADGE_DESCRIPTION' => esc_html( $badge_desc ),
-                'AWARD_TITLE'       => esc_html( $award_title ),
-                'AWARD_URL'         => $award_url,
-                'EVIDENCE'          => $award_evidence
-            )
+            $message_tags
         );
 
         add_filter( 'wpbadger_awarded_email_html', 'wptexturize'        );
